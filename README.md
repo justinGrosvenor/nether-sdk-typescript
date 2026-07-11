@@ -62,6 +62,19 @@ A non-zero guest exit code is a normal `ExecResult` (not an error). A
 control-plane failure (agent not ready, unknown verb, rejected transfer) raises
 `NetherControlError`.
 
+**Argv vs raw line.** `exec` accepts either shape:
+
+- A **single string** is a raw shell line, passed through verbatim, so shell
+  operators work: `sb.exec("ls | wc -l")` runs the pipeline.
+- **Multiple arguments** are each POSIX shell-quoted and joined, so there is no
+  injection surface: `sb.exec("python", "-c", "print(2+2)")` sends
+  `python -c 'print(2+2)'`.
+
+`put`/`get` paths are passed verbatim and must not contain whitespace (the
+protocol parses arguments as single tokens); the host side is confined to the
+sandbox's transfer jail (the work dir), so placing files there is the caller's
+responsibility.
+
 ## Lifecycle: what `create` does
 
 `Sandbox.create` ports nether's `bake.py do_fork`:

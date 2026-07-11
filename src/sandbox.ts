@@ -19,6 +19,17 @@ import type { SandboxInfo, SandboxStats } from "./types.js";
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * POSIX shell-quote a single argv token (equivalent to Python's `shlex.quote`).
+ * A token made only of safe characters is returned unchanged; anything else is
+ * single-quoted with embedded single quotes escaped as `'\''`.
+ */
+function shellQuote(arg: string): string {
+  if (arg.length === 0) return "''";
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(arg)) return arg;
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
 /** Options for `Sandbox.create` (launch a fork of a base). */
 export interface CreateOptions extends LaunchOptions {
   /** Seconds to keep retrying the control-socket handshake. Default 30. */
@@ -145,34 +156,62 @@ export class Sandbox {
     if (err !== null) throw new NetherControlError(`${verb}: ${err}`);
   }
 
+  private static assertNoWhitespace(p: string, verb: string): void {
+    if (/\s/.test(p)) {
+      throw new NetherError(
+        `nether ${verb}: path may not contain whitespace (not expressible over the protocol): ${JSON.stringify(p)}`,
+      );
+    }
+  }
+
   /**
-   * Run a shell command in the guest. Multiple arguments are joined with a
-   * single space into one shell line (no auto-quoting: quote yourself if an
-   * argument contains spaces). Returns the guest's exit code and BOUNDED stdout:
-   * the control channel caps command output (default 1 MiB), so large or binary
-   * output MUST be retrieved with `get()`, not read from `exec`. A non-zero guest
-   * exit code is a normal result; a control-plane failure (agent not ready, ...)
-   * raises `NetherControlError`.
+   * Run a command in the guest.
+   *
+   * - A SINGLE string argument is passed through verbatim as a shell line, so
+   *   operators work: `exec("ls | wc -l")` runs the pipeline as written.
+   * - MULTIPLE arguments are each POSIX shell-quoted (like `shlex.quote`) and
+   *   joined with spaces, so `exec("python", "-c", "print(2+2)")` sends
+   *   `python -c 'print(2+2)'` with no injection surface.
+   *
+   * Returns the guest's exit code and BOUNDED stdout+stderr: the control channel
+   * caps command output (default 1 MiB), so large or binary output MUST be
+   * retrieved with `get()`, not read from `exec`. A non-zero guest exit code is a
+   * normal result (returned in `exitCode`); only a control-plane failure (agent
+   * not ready, rejected command, ...) raises `NetherControlError`.
    */
   async exec(...args: string[]): Promise<ExecResult> {
     this.assertOpen();
     if (args.length === 0) throw new NetherError("nether exec: empty command");
-    const command = args.join(" ");
+    const command =
+      args.length === 1 ? (args[0] as string) : args.map(shellQuote).join(" ");
     const reply = await this.client.conn.command(command, { shape: "framed" });
     Sandbox.throwOnControlError(reply, "exec");
     return toExecResult(reply);
   }
 
-  /** Push a host file into the guest (`__put__`, <= 16 MiB). Raises on ERR. */
+  /**
+   * Push a host file into the guest (`__put__`, <= 16 MiB). Paths are passed
+   * verbatim and must not contain whitespace (the protocol parses arguments as
+   * single tokens). The host path is confined to the sandbox's transfer jail
+   * (the launch/work dir), so it is the caller's responsibility to place the
+   * source there. Raises `NetherControlError` on ERR.
+   */
   async put(hostPath: string, guestPath: string): Promise<void> {
     this.assertOpen();
+    Sandbox.assertNoWhitespace(hostPath, "put");
+    Sandbox.assertNoWhitespace(guestPath, "put");
     const reply = await this.client.put(hostPath, guestPath);
     Sandbox.throwOnControlError(reply, "put");
   }
 
-  /** Pull a guest file to the host (`__get__`). Raises on ERR. */
+  /**
+   * Pull a guest file to the host (`__get__`). Same jail + no-whitespace rule as
+   * `put`: the host destination is confined to the transfer jail. Raises on ERR.
+   */
   async get(guestPath: string, hostPath: string): Promise<void> {
     this.assertOpen();
+    Sandbox.assertNoWhitespace(guestPath, "get");
+    Sandbox.assertNoWhitespace(hostPath, "get");
     const reply = await this.client.get(guestPath, hostPath);
     Sandbox.throwOnControlError(reply, "get");
   }

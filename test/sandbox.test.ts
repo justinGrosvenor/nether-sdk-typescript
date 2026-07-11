@@ -72,6 +72,14 @@ describe("Sandbox.create (full base)", () => {
       const code = await sb.exec("exit", "7");
       expect(code.exitCode).toBe(7); // a non-zero guest exit is a normal result
 
+      // Multiple args are shell-quoted; a special char gets single-quoted.
+      const quoted = await sb.exec("echo", "a b", "print(2+2)");
+      expect(quoted.output).toBe("ran:echo 'a b' 'print(2+2)'\n");
+
+      // A single string is a raw shell line (operators pass through).
+      const raw = await sb.exec("echo hi | cat");
+      expect(raw.output).toBe("ran:echo hi | cat\n");
+
       const stats = await sb.stats();
       expect(stats.uptimeMs).toBe(1234);
       expect(stats.commands).toBe(3);
@@ -94,6 +102,8 @@ describe("Sandbox.create (full base)", () => {
       await sb.snapshot("child.snap");
       await expect(sb.put("/host/MISS", "/guest/x")).rejects.toBeInstanceOf(NetherControlError);
       await expect(sb.exec("AGENTDOWN")).rejects.toBeInstanceOf(NetherControlError);
+      // Fail fast on a whitespace path (not expressible over the protocol).
+      await expect(sb.put("/host/a b", "/guest/x")).rejects.toBeInstanceOf(NetherError);
     } finally {
       await sb.close();
     }
