@@ -2,11 +2,11 @@ import * as net from "node:net";
 import {
   HANG_MS,
   IDLE_MS,
+  isFramed,
   type Reply,
   ReplyDecoder,
   type ReplyShape,
   SETTLE_MS,
-  isFramed,
   validateCommand,
 } from "./codec.js";
 import { NetherProtocolError, NetherTimeout } from "./errors.js";
@@ -87,7 +87,9 @@ export class NetherConnection {
     await this.connectSocket();
     const reply = await this.command("__info__", { shape: "framed" });
     if (reply.kind !== "framed") {
-      this.destroy(new NetherProtocolError(`nether handshake: unexpected ${reply.kind} reply to __info__`));
+      this.destroy(
+        new NetherProtocolError(`nether handshake: unexpected ${reply.kind} reply to __info__`),
+      );
       throw new NetherProtocolError(`nether handshake failed: ${JSON.stringify(reply)}`);
     }
     const info = parseInfo(reply.text);
@@ -189,7 +191,9 @@ export class NetherConnection {
       if (p.decoder.shape === "unframed") {
         this.settle(p, p.decoder.finishUnframed()); // idle gap ends the reply (may be empty)
       } else {
-        this.failPending(new NetherTimeout(`nether command timeout after ${p.windowMs}ms inactivity`));
+        this.failPending(
+          new NetherTimeout(`nether command timeout after ${p.windowMs}ms inactivity`),
+        );
       }
     }, p.windowMs);
   }

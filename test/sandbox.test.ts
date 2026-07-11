@@ -5,10 +5,11 @@
  * Sandbox.create (launch -> handshake), exec/put/get/snapshot/stats/info, the
  * compressed-base rehydrate path, park, attach, and full teardown.
  */
-import { fileURLToPath } from "node:url";
+
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { NetherControlError, NetherError } from "../src/errors.js";
 import { launchFork, readSnapEncoding, teardown } from "../src/lifecycle.js";
@@ -204,8 +205,8 @@ describe("Sandbox.create failure paths", () => {
   });
 
   it("throws when the base file does not exist", async () => {
-    await expect(
-      Sandbox.create({ base: "/no/such/base.snap", name: "tx" }),
-    ).rejects.toBeInstanceOf(NetherError);
+    await expect(Sandbox.create({ base: "/no/such/base.snap", name: "tx" })).rejects.toBeInstanceOf(
+      NetherError,
+    );
   });
 });

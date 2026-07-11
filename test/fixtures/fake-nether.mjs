@@ -17,8 +17,6 @@ import * as fs from "node:fs";
 import * as net from "node:net";
 import * as path from "node:path";
 
-const RS = 0x1e;
-
 function readConf() {
   const conf = {};
   let text = "";

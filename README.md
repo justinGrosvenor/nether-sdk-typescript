@@ -1,6 +1,11 @@
 # @nether/sdk
 
-TypeScript SDK for the [nether](https://github.com/) sandbox control protocol.
+[![CI](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml/badge.svg)](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@nether/sdk)](https://www.npmjs.com/package/@nether/sdk)
+[![node](https://img.shields.io/node/v/@nether/sdk)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
+TypeScript SDK for the [nether](https://github.com/justinGrosvenor/nether) sandbox control protocol.
 Launch a sandbox forked from a base snapshot, drive it (run commands, move
 files, snapshot, park), and tear it down deterministically - over nether's
 line/frame protocol on a Unix socket.
@@ -119,7 +124,7 @@ try {
 ## Low-level API
 
 The facade is built on primitives that are exported for integrators who need
-direct control (this is the surface [swerver-console](https://github.com/) drives):
+direct control (this is the surface swerver-console drives):
 
 - **Codec**: `ReplyDecoder`, `isFramed`, `unescapeBody`, `controlError`,
   `validateCommand`, `eventsReplyComplete`, `screenDiffReplyComplete`, and the
@@ -156,15 +161,25 @@ client.close();
 
 The unit suite needs no live nether: the codec is tested against the contract's
 8 golden vectors, the connection/verbs against an in-process fake control server,
-and `Sandbox.create`/teardown against a fake nether binary. Full end-to-end
-against a codesigned nether + a real base is a manual/CI step.
+and `Sandbox.create`/teardown against a fake nether binary.
 
 ```sh
 npm run build      # tsc -> dist/
-npm test           # vitest
-npm run typecheck  # tsc --noEmit (src + tests)
+npm run check      # biome + tsc --noEmit + vitest (what CI runs)
+npm test           # vitest only
+```
+
+### Real end-to-end
+
+`examples/e2e.mjs` drives a real HVF sandbox: fork from a base, exec, snapshot a
+child while running, warm-fork a second sandbox from that child, and read the
+state back. It needs an Apple Silicon Mac with a codesigned nether (see
+`~/nether/docs/codesigning.md`) and a base snapshot:
+
+```sh
+npm run build && node examples/e2e.mjs --base /path/to/base.snap
 ```
 
 ## License
 
-MIT
+[Apache-2.0](LICENSE).

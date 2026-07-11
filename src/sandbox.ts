@@ -9,8 +9,8 @@
  *   // Symbol.asyncDispose tears down at end of scope; sb.close() does it eagerly.
  */
 import type { ChildProcess } from "node:child_process";
-import { type Reply, controlError } from "./codec.js";
-import { NetherConnection } from "./connection.js";
+import { controlError, type Reply } from "./codec.js";
+import type { NetherConnection } from "./connection.js";
 import { NetherControlError, NetherError } from "./errors.js";
 import { type LaunchOptions, launchFork, teardown } from "./lifecycle.js";
 import { parseInfo, parseStats } from "./parse.js";
@@ -182,8 +182,7 @@ export class Sandbox {
   async exec(...args: string[]): Promise<ExecResult> {
     this.assertOpen();
     if (args.length === 0) throw new NetherError("nether exec: empty command");
-    const command =
-      args.length === 1 ? (args[0] as string) : args.map(shellQuote).join(" ");
+    const command = args.length === 1 ? (args[0] as string) : args.map(shellQuote).join(" ");
     const reply = await this.client.conn.command(command, { shape: "framed" });
     Sandbox.throwOnControlError(reply, "exec");
     return toExecResult(reply);
@@ -259,8 +258,7 @@ export class Sandbox {
     this.assertOpen();
     const reply = await this.client.conn.command("__stats__", { shape: "framed" });
     Sandbox.throwOnControlError(reply, "stats");
-    const text =
-      reply.kind === "framed" ? reply.text : new TextDecoder().decode(new Uint8Array());
+    const text = reply.kind === "framed" ? reply.text : new TextDecoder().decode(new Uint8Array());
     return parseStats(text);
   }
 

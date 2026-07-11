@@ -1,6 +1,6 @@
 import { type Reply, screenDiffReplyComplete } from "./codec.js";
 import { NetherConnection } from "./connection.js";
-import { type ScreenDiff, parseScreenDiff } from "./parse.js";
+import { parseScreenDiff, type ScreenDiff } from "./parse.js";
 import type { SandboxInfo } from "./types.js";
 
 export interface ExecResult {

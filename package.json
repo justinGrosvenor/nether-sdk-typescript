@@ -1,9 +1,22 @@
 {
   "name": "@nether/sdk",
   "version": "0.1.0",
+  "packageManager": "pnpm@10.33.0",
   "description": "TypeScript SDK for the nether sandbox control protocol: a high-level Sandbox facade plus the low-level wire codec and role clients. Zero runtime dependencies.",
   "type": "module",
-  "license": "MIT",
+  "license": "Apache-2.0",
+  "author": "Justin Grosvenor",
+  "homepage": "https://github.com/justinGrosvenor/nether-sdk-typescript#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justinGrosvenor/nether-sdk-typescript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/justinGrosvenor/nether-sdk-typescript/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=22"
   },
@@ -17,7 +30,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "scripts": {
@@ -25,6 +40,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "biome check src test examples",
+    "format": "biome format --write .",
+    "check": "biome check src test examples && tsc --noEmit && vitest run",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -35,6 +53,7 @@
     "sdk"
   ],
   "devDependencies": {
+    "@biomejs/biome": "2.5.3",
     "@types/node": "^22.15.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"

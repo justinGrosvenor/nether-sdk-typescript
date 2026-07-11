@@ -23,9 +23,7 @@ const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms
 
 /** Path to the nether binary: `NETHER_BIN` env, else `~/nether/zig-out/bin/nether`. */
 export function netherBin(): string {
-  return (
-    process.env.NETHER_BIN ?? path.join(os.homedir(), "nether", "zig-out", "bin", "nether")
-  );
+  return process.env.NETHER_BIN ?? path.join(os.homedir(), "nether", "zig-out", "bin", "nether");
 }
 
 /** Root of the nether checkout (`NETHER_ROOT` env, else `~/nether`), for kernels. */
@@ -96,7 +94,8 @@ function netherTransform(
     proc.on("exit", (code) => {
       fs.rmSync(wd, { recursive: true, force: true });
       if (code === 0) resolve();
-      else reject(new NetherError(`nether transform (${keyIn}) failed (rc=${code}): ${err.trim()}`));
+      else
+        reject(new NetherError(`nether transform (${keyIn}) failed (rc=${code}): ${err.trim()}`));
     });
   });
 }
@@ -112,8 +111,7 @@ export async function ensureForkable(snap: string, bin = netherBin()): Promise<s
   const abs = path.resolve(snap);
   if (readSnapEncoding(abs) !== RAM_COMPRESSED) return abs;
   const hy = `${abs}.hydrated`;
-  const fresh =
-    fs.existsSync(hy) && fs.statSync(hy).mtimeMs >= fs.statSync(abs).mtimeMs;
+  const fresh = fs.existsSync(hy) && fs.statSync(hy).mtimeMs >= fs.statSync(abs).mtimeMs;
   if (!fresh) {
     await netherTransform("rehydrate_in", "rehydrate_out", abs, hy, bin);
   }
@@ -247,10 +245,7 @@ export async function teardown(
     } catch {
       // already gone
     }
-    const killed = await Promise.race([
-      done.then(() => true),
-      sleep(graceMs).then(() => false),
-    ]);
+    const killed = await Promise.race([done.then(() => true), sleep(graceMs).then(() => false)]);
     if (!killed) {
       try {
         proc.kill("SIGKILL");
