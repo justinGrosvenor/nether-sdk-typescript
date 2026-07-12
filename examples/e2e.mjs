@@ -42,8 +42,6 @@ if (!existsSync(bin)) {
   process.exit(2);
 }
 
-const child = path.join(os.tmpdir(), `${name}-child.snap`);
-
 console.log(`[e2e] forking a sandbox from ${base} ...`);
 {
   await using sb = await Sandbox.create({ base, name });
@@ -52,18 +50,25 @@ console.log(`[e2e] forking a sandbox from ${base} ...`);
   if (r.exitCode !== 0) throw new Error(`uname failed: ${JSON.stringify(r)}`);
   console.log(`[e2e] exec uname -> ${r.output.trim()}`);
   await sb.exec("sh", "-c", "echo hello-from-parent > /tmp/marker");
-  await sb.snapshot(child);
+  // __snapshot__ is jailed to the sandbox run dir, so pass a bare name and let
+  // the SDK return where nether wrote it. Restoring a base is not jailed, so the
+  // second sandbox forks from that path directly - done while the parent is
+  // still up, before its run dir is reaped on teardown.
+  const child = await sb.snapshot("child.snap");
   console.log(`[e2e] snapshot while running -> ${child}`);
+
+  console.log("[e2e] forking a SECOND sandbox from the child snapshot (warm fork) ...");
+  {
+    await using fk = await Sandbox.create({ base: child, name: `${name}-fork` });
+    const r2 = await fk.exec("cat", "/tmp/marker");
+    if (r2.exitCode !== 0 || !r2.output.includes("hello-from-parent")) {
+      throw new Error(`fork did not resume parent state: ${JSON.stringify(r2)}`);
+    }
+    console.log(
+      `[e2e] fork resumed parent state: /tmp/marker = ${JSON.stringify(r2.output.trim())}`,
+    );
+  }
+  console.log("[e2e] fork torn down");
 }
 console.log("[e2e] parent torn down");
-
-console.log("[e2e] forking a SECOND sandbox from the child snapshot (warm fork) ...");
-{
-  await using fk = await Sandbox.create({ base: child, name: `${name}-fork` });
-  const r = await fk.exec("cat", "/tmp/marker");
-  if (r.exitCode !== 0 || !r.output.includes("hello-from-parent")) {
-    throw new Error(`fork did not resume parent state: ${JSON.stringify(r)}`);
-  }
-  console.log(`[e2e] fork resumed parent state: /tmp/marker = ${JSON.stringify(r.output.trim())}`);
-}
 console.log("[e2e] OK: create -> exec -> snapshot -> warm-fork -> exec -> teardown");

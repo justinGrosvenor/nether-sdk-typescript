@@ -9,6 +9,7 @@
  *   // Symbol.asyncDispose tears down at end of scope; sb.close() does it eagerly.
  */
 import type { ChildProcess } from "node:child_process";
+import * as path from "node:path";
 import { controlError, type Reply } from "./codec.js";
 import type { NetherConnection } from "./connection.js";
 import { NetherControlError, NetherError } from "./errors.js";
@@ -99,6 +100,14 @@ export class Sandbox {
   /** The underlying control connection (proto version, raw `command`, ...). */
   get connection(): NetherConnection {
     return this.client.conn;
+  }
+
+  /**
+   * The sandbox launch/jail dir - where `__snapshot__`/`__put__`/`__get__` are
+   * confined - or `null` for an `attach`ed sandbox whose dir is not local.
+   */
+  get runDir(): string | null {
+    return this.workDir;
   }
 
   /**
@@ -217,13 +226,33 @@ export class Sandbox {
 
   /**
    * Capture a fork-source base snapshot on demand (`__snapshot__`); the sandbox
-   * keeps running. Blocks until the file is on disk. Raises on ERR (e.g. the
-   * guest was not quiescent, or the backend does not support it).
+   * keeps running and is unaffected. Blocks until the file is on disk.
+   *
+   * `name` is a BARE filename, not a host path: nether's `__snapshot__` (like
+   * `__put__`/`__get__`) is jailed to the sandbox run dir, so it writes
+   * `<runDir>/<name>` and rejects any path that escapes the jail (an absolute
+   * `/tmp` destination is refused by design). Returns the absolute path nether
+   * wrote, so callers can fork from it (`create({ base })`; restoring a base is
+   * not jailed) without building jail paths by hand. Returns the bare `name`
+   * for an `attach`ed sandbox whose run dir is not known locally. Raises on ERR
+   * (e.g. the guest was not quiescent, or the backend does not support it).
+   *
+   * The returned file lives inside the run dir, which is reaped when an owned
+   * sandbox is closed; fork from it (or copy it out) before teardown.
    */
-  async snapshot(path: string): Promise<void> {
+  async snapshot(name: string): Promise<string> {
     this.assertOpen();
-    const reply = await this.client.snapshot(path);
+    Sandbox.assertNoWhitespace(name, "snapshot");
+    if (path.isAbsolute(name)) {
+      throw new NetherError(
+        `nether snapshot: name must be relative to the sandbox run dir (the __snapshot__ ` +
+          `write jail); pass a bare name like "child.snap", not an absolute path: ` +
+          JSON.stringify(name),
+      );
+    }
+    const reply = await this.client.snapshot(name);
     Sandbox.throwOnControlError(reply, "snapshot");
+    return this.workDir === null ? name : path.join(this.workDir, name);
   }
 
   /**
