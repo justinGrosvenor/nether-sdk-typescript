@@ -1,8 +1,6 @@
 # @nether/sdk
 
 [![CI](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml/badge.svg)](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@nether/sdk)](https://www.npmjs.com/package/@nether/sdk)
-[![node](https://img.shields.io/node/v/@nether/sdk)](https://nodejs.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 TypeScript SDK for the [nether](https://github.com/justinGrosvenor/nether) sandbox control protocol.
