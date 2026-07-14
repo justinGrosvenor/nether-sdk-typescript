@@ -6,7 +6,7 @@ All notable changes to `@nether/sdk` are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-07-11
+## [0.1.0] - 2026-07-14
 
 Initial release.
 
@@ -26,3 +26,6 @@ Initial release.
   `__info__` confirm, kill + reap).
 - Test suite (vitest): the 8 golden wire vectors, a fake control server, and a fake nether binary
   exercising the launch/teardown lifecycle. No live HVF required.
+
+[Unreleased]: https://github.com/justinGrosvenor/nether-sdk-typescript/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/justinGrosvenor/nether-sdk-typescript/releases/tag/v0.1.0
