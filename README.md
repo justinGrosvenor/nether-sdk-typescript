@@ -1,4 +1,4 @@
-# @nether/sdk
+# @swerver/nether-sdk
 
 [![CI](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml/badge.svg)](https://github.com/justinGrosvenor/nether-sdk-typescript/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@nether/sdk)](https://www.npmjs.com/package/@nether/sdk)
@@ -18,13 +18,13 @@ line/frame protocol on a Unix socket.
 ## Install
 
 ```sh
-npm install @nether/sdk
+npm install @swerver/nether-sdk
 ```
 
 ## Quickstart
 
 ```ts
-import { Sandbox } from "@nether/sdk";
+import { Sandbox } from "@swerver/nether-sdk";
 
 await using sb = await Sandbox.create({ base: "base.snap", name: "t1" }); // restore=1 fork
 const r = await sb.exec("python", "-c", "print(2+2)"); // { exitCode, output, body }
@@ -112,7 +112,7 @@ A small typed hierarchy; every error is a `NetherError`.
 | `NetherError` | base class. |
 
 ```ts
-import { NetherControlError } from "@nether/sdk";
+import { NetherControlError } from "@swerver/nether-sdk";
 try {
   await sb.put("./missing", "/x");
 } catch (e) {
@@ -139,7 +139,7 @@ direct control (this is the surface swerver-console drives):
   `netherBin` / `netherRoot` / `netherWorkRoot`.
 
 ```ts
-import { PrimaryClient, controlError } from "@nether/sdk";
+import { PrimaryClient, controlError } from "@swerver/nether-sdk";
 const { client, info } = await PrimaryClient.connect("/path/f.sock");
 const reply = await client.put("/host/a", "/guest/a");
 if (controlError(reply)) throw new Error("put failed");

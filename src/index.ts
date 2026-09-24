@@ -1,5 +1,5 @@
 /**
- * @nether/sdk - TypeScript SDK for the nether sandbox control protocol.
+ * @swerver/nether-sdk - TypeScript SDK for the nether sandbox control protocol.
  *
  * Two layers, one package:
  *  - High-level facade: {@link Sandbox} (launch a fork, drive it, tear it down).

@@ -1,5 +1,5 @@
 {
-  "name": "@nether/sdk",
+  "name": "@swerver/nether-sdk",
   "version": "0.1.0",
   "packageManager": "pnpm@10.33.0",
   "description": "TypeScript SDK for the nether sandbox control protocol: a high-level Sandbox facade plus the low-level wire codec and role clients. Zero runtime dependencies.",
