@@ -6,6 +6,15 @@ All notable changes to `@swerver/nether-sdk` are documented here. The format fol
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-21
+
+### Security
+- Require patched Node release lines: 22.23.4, 24.22.1, or 26.12.1 and later.
+- Update CI actions to their Node 24 runtime releases.
+
+### Fixed
+- Build distribution files during packing so release tarballs include the SDK.
+
 ## [0.1.0] - 2026-07-14
 
 Initial release.
